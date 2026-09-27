@@ -28,6 +28,22 @@
 .product-order{display:inline-block;margin-top:16px;font-weight:700;text-decoration:none}
 @media (max-width:760px){.brand img{width:36px;height:36px}.hero-logo-card img{width:190px}.gallery-main{aspect-ratio:1/1}.product-meta{align-items:flex-start;flex-direction:column;gap:5px}}
 
+
+/* WindNests customer details popup — added without changing existing website styles */
+.wn-lead-overlay{position:fixed;inset:0;background:rgba(17,17,17,.62);display:none;align-items:center;justify-content:center;padding:20px;z-index:9999;backdrop-filter:blur(5px)}
+.wn-lead-overlay.wn-show{display:flex}
+.wn-lead-modal{width:min(440px,100%);background:#f6f5f1;color:#111;border:1px solid #ddd;box-shadow:0 24px 70px rgba(0,0,0,.28);position:relative;padding:34px 28px 28px}
+.wn-lead-close{position:absolute;right:14px;top:10px;border:0;background:transparent;color:#111;font-size:28px;line-height:1;cursor:pointer;padding:5px}
+.wn-lead-kicker{font-size:10px;letter-spacing:.18em;font-weight:700;color:#777;margin:0 0 12px;text-align:center}
+.wn-lead-title{font-family:"Playfair Display",serif;font-size:34px;line-height:1.05;text-align:center;margin:0 0 10px}
+.wn-lead-subtitle{font-size:14px;line-height:1.6;color:#666;text-align:center;margin:0 auto 24px;max-width:330px}
+.wn-lead-form label{display:block;font-size:12px;font-weight:700;margin:0 0 7px}
+.wn-lead-form input{width:100%;border:1px solid #cfcfc8;background:#fff;color:#111;padding:14px 13px;font:inherit;font-size:14px;outline:none;margin-bottom:15px}
+.wn-lead-form input:focus{border-color:#111}
+.wn-lead-submit{width:100%;border:1px solid #111;background:#111;color:#fff;padding:14px 16px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.wn-lead-cancel{display:block;width:100%;border:0;background:transparent;color:#555;padding:13px 16px 3px;font:inherit;font-size:13px;cursor:pointer;text-align:center}
+.wn-lead-note{font-size:11px;color:#888;text-align:center;line-height:1.5;margin:14px 0 0}
+@media(max-width:520px){.wn-lead-modal{padding:30px 20px 22px}.wn-lead-title{font-size:30px}}
 </style>
 </head>
 <body>
@@ -134,6 +150,27 @@
         <a class="contact-row" href="https://maps.app.goo.gl/f3RvcyPkA6Kih3Y17?g_st=awb" target="_blank" rel="noopener"><span>Store Location</span><strong>Open in Google Maps →</strong></a>
       </div>
     </section>
+  
+
+  <!-- WindNests customer details popup -->
+  <div class="wn-lead-overlay" id="wnLeadOverlay" aria-hidden="true">
+    <div class="wn-lead-modal" role="dialog" aria-modal="true" aria-labelledby="wnLeadTitle">
+      <button class="wn-lead-close" id="wnLeadClose" type="button" aria-label="Close">&times;</button>
+      <p class="wn-lead-kicker">WINDNESTS</p>
+      <h2 class="wn-lead-title" id="wnLeadTitle">Sign Up and Enjoy 5% OFF</h2>
+      <p class="wn-lead-subtitle">Share your name and contact number to claim your 5% OFF offer. We'll open WhatsApp so you can send your details directly to WindNests.</p>
+      <form class="wn-lead-form" id="wnLeadForm">
+        <label for="wnLeadName">Name</label>
+        <input id="wnLeadName" name="name" type="text" autocomplete="name" placeholder="Enter your name" required>
+        <label for="wnLeadPhone">Contact Number</label>
+        <input id="wnLeadPhone" name="phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="10" placeholder="Enter 10-digit number" pattern="[0-9]{10}" required>
+        <button class="wn-lead-submit" type="submit">Submit</button>
+        <button class="wn-lead-cancel" id="wnLeadCancel" type="button">Maybe Later</button>
+      </form>
+      <p class="wn-lead-note">Your details are not sent until you choose Submit and send the WhatsApp message.</p>
+    </div>
+  </div>
+
   </main>
 
   <footer><strong>WINDNESTS</strong><span>YOUR DESIGN. YOUR STYLE.</span><small>© 2026 WindNests. All rights reserved.</small></footer>
@@ -151,6 +188,67 @@ document.querySelectorAll('.product-card').forEach(card => {
     });
   });
 });
+
+
+
+// WindNests customer details popup
+(function(){
+  const overlay = document.getElementById('wnLeadOverlay');
+  const form = document.getElementById('wnLeadForm');
+  const closeBtn = document.getElementById('wnLeadClose');
+  const cancelBtn = document.getElementById('wnLeadCancel');
+  const nameInput = document.getElementById('wnLeadName');
+  const phoneInput = document.getElementById('wnLeadPhone');
+  const storageKey = 'windnests_lead_popup_seen';
+
+  if(!overlay || !form) return;
+
+  function closePopup(){
+    overlay.classList.remove('wn-show');
+    overlay.setAttribute('aria-hidden','true');
+    try{ localStorage.setItem(storageKey,'1'); }catch(e){}
+  }
+
+  function openPopup(){
+    overlay.classList.add('wn-show');
+    overlay.setAttribute('aria-hidden','false');
+  }
+
+  closeBtn.addEventListener('click', closePopup);
+  cancelBtn.addEventListener('click', closePopup);
+  overlay.addEventListener('click', function(e){ if(e.target === overlay) closePopup(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && overlay.classList.contains('wn-show')) closePopup(); });
+
+  phoneInput.addEventListener('input', function(){
+    this.value = this.value.replace(/\D/g,'').slice(0,10);
+  });
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    const name = nameInput.value.trim();
+    const phone = phoneInput.value.replace(/\D/g,'');
+    if(!name){ nameInput.focus(); return; }
+    if(!/^[6-9]\d{9}$/.test(phone)){
+      phoneInput.setCustomValidity('Please enter a valid 10-digit Indian mobile number.');
+      phoneInput.reportValidity();
+      return;
+    }
+    phoneInput.setCustomValidity('');
+
+    const message = 'Hello WindNests!%0A%0ANew customer details:%0AName: ' + encodeURIComponent(name) + '%0AContact Number: ' + encodeURIComponent(phone) + '%0A%0ASubmitted through the WindNests website.';
+    try{ localStorage.setItem(storageKey,'1'); }catch(err){}
+    window.open('https://wa.me/918884022601?text=' + message, '_blank', 'noopener');
+    closePopup();
+  });
+
+  try{
+    if(!localStorage.getItem(storageKey)){
+      setTimeout(openPopup, 1800);
+    }
+  }catch(e){
+    setTimeout(openPopup, 1800);
+  }
+})();
 
 </script>
 </body>
